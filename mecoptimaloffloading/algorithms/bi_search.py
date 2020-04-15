@@ -43,7 +43,7 @@ def update(config, lamda, mu):
                                             config['M'])
     config['f'][2] = optimal_freq_device_2(config['beta2_t'], config['beta2_e'],
                                             mu, config['_k'], config['k'],
-                                            config['f_peak'], config['M'])
+                                            config['f_peak'], config['N'])
 
 def bi_search(config, prec=0.0001):
     vub, vlb = config['beta2_t'], 0

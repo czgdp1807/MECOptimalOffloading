@@ -33,13 +33,13 @@ def energy_consumption_local(workload, cpu_frequency, k):
             zip(workload, cpu_frequency)]
 
 def uplink_data_rate(transmission_power, offloading_gain,
-                     bandwidth, noise_variance):
-    return [bandwidth*math.log2(1 + (p*h)/noise_variance)
+                     bandwidth, sigma):
+    return [bandwidth*math.log2(1 + (p*h)/sigma**2)
             for p, h in zip(transmission_power, offloading_gain)]
 
 def offloading_transmission_time(Outputs, data_rate):
-    return [Outputs[i-1]/data_rate[i] for i in
-            range(1, len(data_rate))]
+    return [0] + [Outputs[i-1]/data_rate[i] for i in
+                    range(1, len(data_rate))]
 
 def offloading_transmission_energy(transmission_power, transmission_time):
     return [p*t for p, t in zip(transmission_power, transmission_time)]
@@ -48,29 +48,29 @@ def exec_time_edge(workload, cpu_frequency):
     return [L/cpu_frequency for L in workload]
 
 def downlink_data_rate(transmission_power, downloading_gain,
-                       bandwidth, noise_variance):
-    return [bandwidth*math.log(1 + (transmission_power*g)/noise_variance)
-            for g in downloading_gain]
+                       bandwidth, sigma):
+    return [bandwidth*math.log(1 + (t*g)/sigma**2)
+            for t, g in zip(transmission_power, downloading_gain)]
 
 def downloading_transmission_time(Outputs, data_rate):
     return offloading_transmission_time(Outputs, data_rate)
 
 def computation_time_device_1(local_times, edge_times, a):
-    return [(1 - ai)*tl + ai*tc for ai, tl, tc
-            in zip(a, local_times, edge_times)]
+    return sum([(1 - ai)*tl + ai*tc for ai, tl, tc
+            in zip(a, local_times, edge_times)])
 
 def transmission_time_device_1(up_time, down_time, a):
-    return [a[i]*(1 - a[i-1])*up_time[i] +
+    return sum([a[0]*up_time[0]] + [a[i]*(1 - a[i-1])*up_time[i] +
             (1 - a[i])*a[i-1]*down_time[i]
-            for i in range(1, len(a))]
+            for i in range(1, len(a) - 1)] + [a[-1]*down_time[-1]])
 
 def total_time_device_1(computation_time, transmission_time):
     return computation_time + transmission_time
 
 def energy_consumption_device_1(local_energy, transmission_energy, a):
-    return [(1 - a[i])*local_energy[i] +
+    return sum([0] + [(1 - a[i])*local_energy[i] +
             a[i]*(1 - a[i-1])*transmission_energy[i]
-            for i in range(1, len(a))]
+            for i in range(1, len(a) - 1)] + [(1 - a[-2])*transmission_energy[-1]])
 
 def energy_consumption_device_2(local_energy, transmission_energy, a):
     return energy_consumption_device_1(local_energy, transmission_energy, a)
@@ -117,11 +117,11 @@ def optimal_transmission_power_device_1(beta_t, beta_e, lamda, sigma, P, h, M):
     B1 = lambda i: h[i]*(beta_t + lamda)/(beta_e*sigma**2) - 1
     A2 = 1 + lamda/(beta_e*P)
     B2 = lambda i: (h[i]*lamda)/(beta_e*sigma**2) - 1
-    cond = lambda i: h[i] < (sigma**2/P)*(A1/(-mpmath.lambertw(-A1*math.exp(-A1))) - 1)
-    l1 = [P if cond(i) else (sigma**2/h[i])*(B1(i)/mpmath.lambertw(B1(i)/math.e) - 1)
+    cond = lambda i: h[i] < (sigma**2/P)*(A1/-(mpmath.lambertw(-A1*math.exp(-A1))) - 1)
+    l1 = [0] + [P if cond(i) else (sigma**2/h[i])*(B1(i)/(mpmath.lambertw(B1(i)/math.e)) - 1)
           for i in range(M)]
-    cond = lambda i: h[i] < (sigma**2/P)*(A2/(-mpmath.lambertw(-A2*math.exp(-A2))) - 1)
-    l1.append(P if cond(M+1) else (sigma**2/h[M+1])*(B2(M+1)/mpmath.lambertw(B2(M+1)/math.e) - 1))
+    cond = lambda i: h[i] < (sigma**2/P)*(A2/-(mpmath.lambertw(-A2*math.exp(-A2))) - 1)
+    l1.append(P if cond(M+1) else (sigma**2/h[M+1])*(B2(M+1)/(mpmath.lambertw(B2(M+1)/math.e)) - 1))
     return l1
 
 def optimal_transmission_power_device_2(beta_t, beta_e, mu, sigma, P, h, k, N):
@@ -129,10 +129,10 @@ def optimal_transmission_power_device_2(beta_t, beta_e, mu, sigma, P, h, k, N):
     B3 = lambda i: (h[i]*beta_t)/(beta_e*sigma**2) - 1
     A4 = 1 + mu/(beta_e*P)
     B4 = lambda i: (h[i]*mu)/(beta_e*sigma**2) - 1
-    cond = lambda i: h[i] < (sigma**2/P)*(A4/(-mpmath.lambertw(-A4*math.exp(-A4))) - 1)
-    l1 = [P if cond(i) else (sigma**2/h[i])*(B4(i)/mpmath.lambertw(B4(i)/math.e) - 1)
+    cond = lambda i: h[i] < (sigma**2/P)*(A4/-(mpmath.lambertw(-A4*math.exp(-A4))) - 1)
+    l1 = [P if cond(i) else (sigma**2/h[i])*(B4(i)/(mpmath.lambertw(B4(i)/math.e)) - 1)
           for i in range(k + 1)]
-    cond = lambda i: h[i] < (sigma**2/P)*(A3/(-mpmath.lambertw(-A3*math.exp(-A3))) - 1)
-    l2 = [P if cond(i) else (sigma**2/h[i])*(B3(i)/mpmath.lambertw(B3(i)/math.e) - 1)
-            for i in range(k + 1, N+1)]
+    cond = lambda i: h[i] < (sigma**2/P)*(A3/-(mpmath.lambertw(-A3*math.exp(-A3))) - 1)
+    l2 = [P if cond(i) else (sigma**2/h[i])*(B3(i)/(mpmath.lambertw(B3(i)/math.e)) - 1)
+            for i in range(k + 1, N + 2)]
     return l1 + l2
