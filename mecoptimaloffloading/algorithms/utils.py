@@ -112,16 +112,20 @@ def optimal_freq_device_2(beta_t, beta_e, mu, _k, k, f_peak, M):
     l2 = [expr2 for _ in range(k, M+2)]
     return l1 + l2
 
+def lambertw(x):
+    num = mpmath.lambertw(x)
+    return num
+
 def optimal_transmission_power_device_1(beta_t, beta_e, lamda, sigma, P, h, M):
     A1 = 1 + (beta_t + lamda)/(beta_e*P)
     B1 = lambda i: h[i]*(beta_t + lamda)/(beta_e*sigma**2) - 1
     A2 = 1 + lamda/(beta_e*P)
     B2 = lambda i: (h[i]*lamda)/(beta_e*sigma**2) - 1
-    cond = lambda i: h[i] < (sigma**2/P)*(A1/-(mpmath.lambertw(-A1*math.exp(-A1))) - 1)
-    l1 = [0] + [P if cond(i) else (sigma**2/h[i])*(B1(i)/(mpmath.lambertw(B1(i)/math.e)) - 1)
+    cond = lambda i: h[i] < (sigma**2/P)*(A1/-(lambertw(-A1*math.exp(-A1))) - 1)
+    l1 = [0] + [P if cond(i) else (sigma**2/h[i])*(B1(i)/(lambertw(B1(i)/math.e)) - 1)
           for i in range(M)]
-    cond = lambda i: h[i] < (sigma**2/P)*(A2/-(mpmath.lambertw(-A2*math.exp(-A2))) - 1)
-    l1.append(P if cond(M+1) else (sigma**2/h[M+1])*(B2(M+1)/(mpmath.lambertw(B2(M+1)/math.e)) - 1))
+    cond = lambda i: h[i] < (sigma**2/P)*(A2/-(lambertw(-A2*math.exp(-A2))) - 1)
+    l1.append(P if cond(M+1) else (sigma**2/h[M+1])*(B2(M+1)/(lambertw(B2(M+1)/math.e)) - 1))
     return l1
 
 def optimal_transmission_power_device_2(beta_t, beta_e, mu, sigma, P, h, k, N):
@@ -136,3 +140,34 @@ def optimal_transmission_power_device_2(beta_t, beta_e, mu, sigma, P, h, k, N):
     l2 = [P if cond(i) else (sigma**2/h[i])*(B3(i)/(mpmath.lambertw(B3(i)/math.e)) - 1)
             for i in range(k + 1, N + 2)]
     return l1 + l2
+
+def energy_time(config):
+    local_energy = energy_consumption_local(config['L'][1], config['f'][1], config['_k'])
+    t1_data_rate = uplink_data_rate(config['p'][1], config['h'][1],
+                                    config['W'], config['sigma'])
+    t1_up_times = offloading_transmission_time(config['O'][1], t1_data_rate)
+    t1_data_rate = downlink_data_rate(config['p'][1], config['g'][1],
+                                        config['W'], config['sigma'])
+    t1_down_times = downloading_transmission_time(config['O'][1], t1_data_rate)
+    offloading_enrgy = offloading_transmission_energy(config['p'][1], t1_up_times)
+    energy_device_1 = energy_consumption_device_1(local_energy, offloading_enrgy, config['a'][1])
+    local_times = exec_time_local(config['L'][1], config['f'][1])
+    edge_times = exec_time_edge(config['L'][1], config['fc'])
+    total_comp_time_1 = computation_time_device_1(local_times, edge_times, config['a'][1])
+    trans_times = transmission_time_device_1(t1_up_times, t1_down_times, config['a'][1])
+    total_time_device_1 = total_comp_time_1 + trans_times
+    local_energy = energy_consumption_local(config['L'][2], config['f'][2], config['_k'])
+    t2_data_rate = uplink_data_rate(config['p'][2], config['h'][2],
+                                    config['W'], config['sigma'])
+    t2_up_times = offloading_transmission_time(config['O'][2], t2_data_rate)
+    t2_data_rate = downlink_data_rate(config['p'][2], config['g'][2],
+                                        config['W'], config['sigma'])
+    t2_down_times = downloading_transmission_time(config['O'][2], t2_data_rate)
+    offloading_energy = offloading_transmission_energy(config['p'][2], t2_up_times)
+    energy_device_2 = energy_consumption_device_2(local_energy, offloading_energy, config['a'][2])
+    local_times = exec_time_local(config['L'][2], config['f'][2])
+    edge_times = exec_time_edge(config['L'][2], config['fc'])
+    total_comp_time_2 = computation_time_device_1(local_times, edge_times, config['a'][2])
+    trans_times = transmission_time_device_1(t2_up_times, t2_down_times, config['a'][2])
+    total_time_device_2 = total_comp_time_2 + trans_times
+    return energy_device_1, energy_device_2, total_time_device_1, total_time_device_2
