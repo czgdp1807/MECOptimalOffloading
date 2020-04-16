@@ -3,7 +3,6 @@ from mecoptimaloffloading.algorithms.utils import energy_time
 import math, random
 
 def test_local_search():
-    random.seed(2)
     h_func = lambda d: 4.11*((3*10**8)/(4*math.pi*915*10**6*d))**3
     d = {1: 15, 2: 15}
     M, N = 3, 5

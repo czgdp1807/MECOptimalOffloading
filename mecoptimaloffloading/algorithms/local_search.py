@@ -24,8 +24,8 @@ def local_search(config, max_iters=10):
             for j in range(N):
                 if not flag2:
                     break
-                update(config, i, j)
                 curr_a = copy.deepcopy(config['a'])
+                update(config, i, j)
                 try:
                     bi_search(config)
                 except TypeError:
