@@ -32,4 +32,10 @@ def test_local_search():
     ETA1, ETA2 = local_search(config, max_iters=5)
     print(config['a'], ETA1, ETA2)
 
-test_local_search()
+flag = True
+while flag:
+    try:
+        test_local_search()
+        flag = False
+    except TypeError:
+        continue

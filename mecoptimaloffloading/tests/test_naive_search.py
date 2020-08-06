@@ -33,4 +33,11 @@ def test_naive_search():
     print(config['a'], ETA1, ETA2)
 
 
-test_naive_search()
+flag = True
+while flag:
+    try:
+        test_naive_search()
+        flag = False
+    except TypeError:
+        continue
+

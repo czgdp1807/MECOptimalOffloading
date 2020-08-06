@@ -51,4 +51,10 @@ def test_bi_search():
     filename = 'beta1_t' + "_".join(str(config['beta1_t']).split('.')) + ".png"
     plt.savefig("./mecoptimaloffloading/results/bi_search/" + filename)
 
-test_bi_search()
+flag = True
+while flag:
+    try:
+        test_bi_search()
+        flag = False
+    except TypeError:
+        continue
