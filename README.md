@@ -31,4 +31,22 @@ References
 ----------
 
 [1] J. Yan, S. Bi, and Y. J. Zhang, “Optimal offloading and resource allocation in mobile-edge computing with inter-user task dependency,” accepted by IEEE GLOBECOM, Dec. 2018.
+
 [2] Y. Mao, C. You, J. Zhang, K. Huang, and K. B. Letaief, “A survey on mobile edge computing: The communication perspective,” IEEE Commun. Surveys Tuts., vol. 19, no. 4, pp. 2322–2358, Fourthquarter 2017.
+
+Cite As
+-------
+
+```
+@software{gagandeep_singh_2020_4036587,
+  author       = {Gagandeep Singh},
+  title        = {{czgdp1807/MECOptimalOffloading: 
+                   MECOptimalOffloading v1.0.0}},
+  month        = sep,
+  year         = 2020,
+  publisher    = {Zenodo},
+  version      = {v1.0.0},
+  doi          = {10.5281/zenodo.4036587},
+  url          = {https://doi.org/10.5281/zenodo.4036587}
+}
+```
